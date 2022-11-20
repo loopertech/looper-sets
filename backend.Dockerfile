@@ -9,8 +9,8 @@ WORKDIR /backend
 COPY ./backend .
 RUN go mod tidy
 
-RUN go build ./cmd/looper-sets-backend
+RUN go build ./cmd/backend
 
 EXPOSE 8080
 
-CMD ["./looper-sets-backend"]
+CMD ["./backend"]
