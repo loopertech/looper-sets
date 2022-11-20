@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"net/http"
+	service "looper-sets-backend/pkg/services"
 
 	"github.com/edgedb/edgedb-go"
 	"github.com/gin-gonic/gin"
@@ -13,23 +13,23 @@ func Users(server *gin.Engine, db *edgedb.Client) {
 	{
 		// Create user
 		users.POST("/", func(c *gin.Context) {
-			c.JSON(http.StatusOK, "create user")
+			service.CreateUser(c, db)
 		})
 		// Get all users
 		users.GET("/", func(c *gin.Context) {
-			c.JSON(http.StatusOK, "get users")
+			service.GetUsers(c, db)
 		})
 		// Get user
 		users.GET("/:uuid", func(c *gin.Context) {
-			c.JSON(http.StatusOK, "get user")
+			service.GetUser(c, db)
 		})
 		// Edit user
 		users.PATCH("/:uuid", func(c *gin.Context) {
-			c.JSON(http.StatusOK, "edit user")
+			service.EditUser(c, db)
 		})
 		// Delete user
 		users.DELETE("/:uuid", func(c *gin.Context) {
-			c.JSON(http.StatusOK, "delete user")
+			service.DeleteUser(c, db)
 		})
 	}
 }

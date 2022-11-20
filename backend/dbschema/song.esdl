@@ -18,17 +18,17 @@ module song {
 
     property text -> json;
 
-    property video_link -> str;
+    property video_url -> str;
 
-    property song_link -> str;
+    property song_url -> str;
 
-    property music_link -> str;
+    property music_url -> str;
 
     # TODO: Add comments 
     # property comments -> Comment;
 
     link submitter -> user::User;
-    
+
     property created_at -> datetime;
 
     property updated_at -> datetime;

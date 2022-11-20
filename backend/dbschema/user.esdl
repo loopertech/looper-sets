@@ -14,13 +14,13 @@ module user {
     required property username -> str {
       constraint exclusive;
       constraint min_len_value(3);
-      constraint max_len_value(3);
+      constraint max_len_value(32);
     }
 
-    required property displayName -> str {
+    required property display_name -> str {
       constraint exclusive;
       constraint min_len_value(3);
-      constraint max_len_value(3);
+      constraint max_len_value(32);
     }
 
     required property user_type -> UserType {
