@@ -1,0 +1,30 @@
+{
+  "Major": [
+    "A Major",
+    "A#/Bb Major",
+    "B Major",
+    "C Major",
+    "C#/Db Major",
+    "D Major",
+    "D#/Eb Major",
+    "E Major",
+    "F Major",
+    "F#/Gb Major",
+    "G Major",
+    "G#/Ab Major"
+  ],
+  "Minor": [
+    "A Minor",
+    "A#/Bb Minor",
+    "B Minor",
+    "C Minor",
+    "C#/Db Minor",
+    "D Minor",
+    "D#/Eb Minor",
+    "E Minor",
+    "F Minor",
+    "F#/Gb Minor",
+    "G Minor",
+    "G#/Ab Minor"
+  ]
+}
