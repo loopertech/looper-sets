@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AddPingPongRoutes(server *gin.Engine) {
+func PingPong(server *gin.Engine) {
 	server.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, "Pong")
 	})
