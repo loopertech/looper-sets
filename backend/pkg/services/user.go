@@ -241,9 +241,9 @@ func EditUser(c *gin.Context, db *edgedb.Client) {
 		"uuid": uuid,
 		"email": userBody.Email,
 		"username": userBody.Username,
-		"displayName": userBody.DisplayName,
+		"display_name": userBody.DisplayName,
 		"website": userBody.Website,
-		"socialMedia": userBody.SocialMedia,
+		"social_media": userBody.SocialMedia,
 		"now": now,
 	}
 
@@ -269,7 +269,7 @@ func EditUser(c *gin.Context, db *edgedb.Client) {
 	}
 	social, _ := userBody.SocialMedia.Get()
 	if social != "" {
-		query += `social_media := <optional str>$socialMedia, `
+		query += `social_media := <optional str>$social_media, `
 	}
 	
 	// Complete query string
