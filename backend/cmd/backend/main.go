@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	edb "looper-sets-backend/pkg/db"
 	"looper-sets-backend/pkg/routes"
 	"os"
 
@@ -21,6 +22,13 @@ func main() {
 	}
 	fmt.Println(os.Getenv("APP_ENV"))
 
+	
+	db, dbError := edb.ConnectDB()
+	if dbError != nil {
+		log.Fatal(dbError)
+	}
+
+
 	// Setup server
 	host := "localhost:"
 	if os.Getenv("APP_ENV") != "dev" {
@@ -30,7 +38,8 @@ func main() {
 	server := gin.Default()
 
 	// Add routes
-	routes.AddPingPongRoutes(server)
+	routes.PingPong(server)
+	routes.Users(server, db)
  
 	// Start server
 	log.Println("Starting server...")
