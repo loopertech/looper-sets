@@ -1,5 +1,6 @@
 .env
 .env.*
+/backend/tmp
 /frontend/node_modules
 /frontend/build
 /frontend/.svelte-kit
