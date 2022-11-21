@@ -20,7 +20,7 @@ type Song struct {
 	Key edgedb.OptionalStr `edgedb:"key" json:"key"`
 	Layers interface{} `edgedb:"layers" json:"layers"`
 	Text interface{} `edgedb:"text" json:"text"`
-	VideoURL edgedb.OptionalStr `edgedb:"video_url" json:"video"`
+	VideoURL edgedb.OptionalStr `edgedb:"video_url" json:"videoUrl"`
 	SongURL edgedb.OptionalStr `edgedb:"song_url" json:"songUrl"`
 	MusicURL edgedb.OptionalStr `edgedb:"music_url" json:"musicUrl"`
 	Submitter User `edgedb:"submitter" json:"submitter"`
@@ -70,7 +70,7 @@ func CreateSong(c *gin.Context, db *edgedb.Client) {
 	
 	// Build query arguments
 	now := time.Now()
-	args := map[string]interface{}{
+	createSongArgs := map[string]interface{}{
 		"title": songBody.Title,
 		"artist": songBody.Artist,
 		"genre": songBody.Genre,
@@ -87,7 +87,7 @@ func CreateSong(c *gin.Context, db *edgedb.Client) {
 	}
 	
 	// Prepare query
-	query := `WITH song := (
+	createSongQuery := `WITH song := (
 		INSERT song::Song {
 			title :=  <str>$title,
 			artist :=  <str>$artist,
@@ -123,9 +123,32 @@ func CreateSong(c *gin.Context, db *edgedb.Client) {
 	
 	// Run query
 	var song []Song
-	queryError := db.Query(c, query, &song, args)
-	if queryError != nil {
-		log.Println(queryError)
+	createQueryError := db.Query(c, createSongQuery, &song, createSongArgs)
+	if createQueryError != nil {
+		log.Println(createQueryError)
+		c.JSON(http.StatusBadRequest, "Error running query.")
+		return
+	}
+
+	linkSongArgs := map[string]interface{}{
+		"submitter_uuid": headerID,
+		"song_uuid": song[0].ID,
+	}
+	
+	// Prepare query
+	linkSongQuery := `UPDATE user::User
+		FILTER .id = <uuid>$submitter_uuid
+		SET {
+			submitted_songs += (SELECT song::Song FILTER .id = <uuid>$song_uuid)
+		}
+	`
+	
+	log.Println("here")
+	// Run query
+	var user []User
+	linkQueryError := db.Query(c, linkSongQuery, &user, linkSongArgs)
+	if linkQueryError != nil {
+		log.Println(linkQueryError)
 		c.JSON(http.StatusBadRequest, "Error running query.")
 		return
 	}
