@@ -27,7 +27,7 @@ module song {
     # TODO: Add comments 
     # property comments -> Comment;
 
-    link submitter -> user::User;
+    required link submitter -> user::User;
 
     property created_at -> datetime;
 

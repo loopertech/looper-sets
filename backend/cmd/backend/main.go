@@ -41,6 +41,7 @@ func main() {
 	routes.PingPong(server)
 	routes.Users(server, db)
 	routes.Auth(server, db)
+	routes.Songs(server, db)
  
 	// Start server
 	log.Println("Starting server...")
