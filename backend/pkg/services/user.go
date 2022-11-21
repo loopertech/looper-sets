@@ -228,7 +228,18 @@ func GetUser(c *gin.Context, id string, db *edgedb.Client) {
 
 // Edit a user
 func EditUser(c *gin.Context, db *edgedb.Client) {
-	var dbUser []User
+	var header UserHeader
+	headerError := c.BindHeader(&header)
+	if headerError != nil {
+		c.JSON(http.StatusBadRequest, "Error binding header.")
+	}
+	// Parse Header ID
+	headerID, headerParseError := edgedb.ParseUUID(header.ID)
+	if headerParseError != nil {
+		log.Println(headerParseError)
+		c.JSON(http.StatusBadRequest, "Error parsing UUID.")
+		return
+	}
 
 	// Parse UUID
 	uuid, parseError := edgedb.ParseUUID(c.Param("uuid"))
@@ -238,6 +249,12 @@ func EditUser(c *gin.Context, db *edgedb.Client) {
 		return
 	}
 
+	// Check if header ID matches user ID
+	if headerID != uuid {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+	
 	// Parse request body
 	var userBody User
 	bindError := c.BindJSON(&userBody)
@@ -246,8 +263,9 @@ func EditUser(c *gin.Context, db *edgedb.Client) {
 		c.JSON(http.StatusBadRequest, "Error parsing request body.")
 		return
 	}
-
+	
 	// Build query arguments
+	var dbUser []User
 	now := time.Now()
 	args := map[string]interface{}{
 		"uuid": uuid,
@@ -325,7 +343,18 @@ func EditUser(c *gin.Context, db *edgedb.Client) {
 
 // Delete a user
 func DeleteUser(c *gin.Context, db *edgedb.Client) {
-	var dbUser []User
+	var header UserHeader
+	headerError := c.BindHeader(&header)
+	if headerError != nil {
+		c.JSON(http.StatusBadRequest, "Error binding header.")
+	}
+	// Parse Header ID
+	headerID, headerParseError := edgedb.ParseUUID(header.ID)
+	if headerParseError != nil {
+		log.Println(headerParseError)
+		c.JSON(http.StatusBadRequest, "Error parsing UUID.")
+		return
+	}
 
 	// Parse UUID
 	uuid, parseError := edgedb.ParseUUID(c.Param("uuid"))
@@ -335,6 +364,12 @@ func DeleteUser(c *gin.Context, db *edgedb.Client) {
 		return
 	}
 
+	// Check if header ID matches user ID
+	if headerID != uuid {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+	
 	// Build query arguments
 	args := map[string]interface{}{
 		"uuid": uuid,
@@ -342,8 +377,9 @@ func DeleteUser(c *gin.Context, db *edgedb.Client) {
 
 	// Prepare query
 	query := `DELETE user::User FILTER .id = <uuid>$uuid`
-
+	
 	// Run query
+	var dbUser []User
 	dbError := db.Query(c, query, &dbUser, args)
 	if dbError != nil {
 		log.Println(dbError)
