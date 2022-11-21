@@ -40,6 +40,7 @@ func main() {
 	// Add routes
 	routes.PingPong(server)
 	routes.Users(server, db)
+	routes.Auth(server, db)
  
 	// Start server
 	log.Println("Starting server...")

@@ -7,6 +7,7 @@ import (
 
 	"github.com/edgedb/edgedb-go"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -49,12 +50,19 @@ func CreateUser(c *gin.Context, db *edgedb.Client) {
 		c.JSON(http.StatusBadRequest, "Error parsing request body.")
 		return
 	}
+
+	hash, passError := bcrypt.GenerateFromPassword([]byte(userBody.Password), bcrypt.DefaultCost)
+	if passError != nil {
+		log.Println(passError)
+		c.JSON(http.StatusBadRequest, "Error with password.")
+		return
+	}
 	
 	// Build query arguments
 	now := time.Now()
 	args := map[string]interface{}{
 		"email": userBody.Email,
-		"password": userBody.Password,
+		"password": string(hash),
 		"username": userBody.Username,
 		"display_name": userBody.DisplayName,
 		"type": "Looper",
@@ -151,11 +159,14 @@ func GetUsers(c *gin.Context, db *edgedb.Client) {
 }
 
 // Get a user
-func GetUser(c *gin.Context, db *edgedb.Client) {
+func GetUser(c *gin.Context, id string, db *edgedb.Client) {
 	var dbUser []User
 
 	// Parse UUID
-	uuid, parseError := edgedb.ParseUUID(c.Param("uuid"))
+	if id == "" {
+		id = c.Param("uuid")
+	}
+	uuid, parseError := edgedb.ParseUUID(id)
 	if parseError != nil {
 		log.Println(parseError)
 		c.JSON(http.StatusBadRequest, "Error parsing UUID.")
@@ -166,6 +177,7 @@ func GetUser(c *gin.Context, db *edgedb.Client) {
 	args := map[string]interface{}{
 		"uuid": uuid,
 	}
+
 	query := `SELECT user::User {
 		id,
 		email,

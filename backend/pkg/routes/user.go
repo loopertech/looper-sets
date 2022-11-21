@@ -21,7 +21,7 @@ func Users(server *gin.Engine, db *edgedb.Client) {
 		})
 		// Get user
 		users.GET("/:uuid", func(c *gin.Context) {
-			service.GetUser(c, db)
+			service.GetUser(c, "", db)
 		})
 		// Edit user
 		users.PATCH("/:uuid", func(c *gin.Context) {
