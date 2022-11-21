@@ -143,7 +143,6 @@ func CreateSong(c *gin.Context, db *edgedb.Client) {
 		}
 	`
 	
-	log.Println("here")
 	// Run query
 	var user []User
 	linkQueryError := db.Query(c, linkSongQuery, &user, linkSongArgs)
@@ -156,121 +155,101 @@ func CreateSong(c *gin.Context, db *edgedb.Client) {
 	c.JSON(http.StatusCreated, song)
 }
 
-// // Get all users
-// func GetUsers(c *gin.Context, db *edgedb.Client) {
-// 	var dbUsers []User
+// Get all songs
+func GetSongs(c *gin.Context, db *edgedb.Client) {
+	var dbSongs []Song
 
-// 	// Prepare query
-// 	query := `SELECT user::User {
-// 		id,
-// 		email,
-// 		username,
-// 		display_name,
-// 		website,
-// 		social_media,
-// 		submitted_songs,
-// 		saved_songs,
-// 		set_lists,
-// 		created_at,
-// 		updated_at
-// 	}`
+	// Prepare query
+	query := `SELECT song::Song {
+		id,
+		title,
+		artist,
+		genre,
+		looping_type,
+		bpm,
+		key,
+		layers,
+		text,
+		video_url,
+		song_url,
+		music_url,
+		submitter: {
+			id,
+			username,
+			display_name
+		},
+		created_at,
+		updated_at
+	}`
 
-// 	// Run query
-// 	err := db.Query(c, query, &dbUsers)
-// 	if err != nil {
-// 		log.Println(err)
-// 		c.JSON(http.StatusBadRequest, "Error getting users.")
-// 		return
-// 	}
+	// Run query
+	err := db.Query(c, query, &dbSongs)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "Error getting songs.")
+		return
+	}
 
-// 	// Prepare JSON reponse body
-// 	var users []UserJson
-// 	for _, user := range dbUsers {
-// 		users = append(users, UserJson{
-// 			ID: user.ID,
-// 			Email: user.Email,
-// 			Username: user.Username,
-// 			DisplayName: user.DisplayName,
-// 			Website: user.Website,
-// 			SocialMedia: user.SocialMedia,
-// 			SubmittedSongs: user.SubmittedSongs,
-// 			SavedSongs: user.SavedSongs,
-// 			SetLists: user.SetLists,
-// 			CreatedAt: user.CreatedAt,
-// 			UpdatedAt: user.UpdatedAt,
-// 		})
-// 	}
+	c.JSON(http.StatusOK, dbSongs)
+}
 
-// 	c.JSON(http.StatusOK, users)
-// }
+// Get a song
+func GetSong(c *gin.Context, db *edgedb.Client) {
+	var dbSong []Song
 
-// // Get a user
-// func GetUser(c *gin.Context, id string, db *edgedb.Client) {
-// 	var dbUser []User
+	uuid, parseError := edgedb.ParseUUID(c.Param("uuid"))
+	if parseError != nil {
+		log.Println(parseError)
+		c.JSON(http.StatusBadRequest, "Error parsing UUID.")
+		return
+	}
 
-// 	// Parse UUID
-// 	if id == "" {
-// 		id = c.Param("uuid")
-// 	}
-// 	uuid, parseError := edgedb.ParseUUID(id)
-// 	if parseError != nil {
-// 		log.Println(parseError)
-// 		c.JSON(http.StatusBadRequest, "Error parsing UUID.")
-// 		return
-// 	}
+	// Build query arguments
+	args := map[string]interface{}{
+		"uuid": uuid,
+	}
 
-// 	// Build query arguments
-// 	args := map[string]interface{}{
-// 		"uuid": uuid,
-// 	}
+	query := `SELECT song::Song {
+		id,
+		title,
+		artist,
+		genre,
+		looping_type,
+		bpm,
+		key,
+		layers,
+		text,
+		video_url,
+		song_url,
+		music_url,
+		submitter: {
+			id,
+			username,
+			display_name
+		},
+		created_at,
+		updated_at
+	} FILTER .id = <uuid>$uuid`
 
-// 	query := `SELECT user::User {
-// 		id,
-// 		email,
-// 		username,
-// 		display_name,
-// 		website,
-// 		social_media,
-// 		submitted_songs,
-// 		saved_songs,
-// 		set_lists,
-// 		created_at,
-// 		updated_at
-// 	} FILTER .id = <uuid>$uuid`
+	// Run query
+	dbError := db.Query(c, query, &dbSong, args)
+	if dbError != nil {
+		log.Println(dbError)
+		c.JSON(http.StatusBadRequest, "Error getting song.")
+		return
+	}
 
-// 	// Run query
-// 	dbError := db.Query(c, query, &dbUser, args)
-// 	if dbError != nil {
-// 		log.Println(dbError)
-// 		c.JSON(http.StatusBadRequest, "Error getting user.")
-// 		return
-// 	}
+	// Check if users found
+	// If not, return 404
+	if len(dbSong) == 0 {
+		c.JSON(http.StatusNotFound, "Song not found.")
+		return
+	} else {
+		c.JSON(http.StatusOK, dbSong)
+		return
+	}
 
-// 	// Check if users found
-// 	// If not, return 404
-// 	if len(dbUser) == 0 {
-// 		c.JSON(http.StatusNotFound, "User not found.")
-// 		return
-// 	} else {
-// 		// Prepare JSON response body
-// 		user := UserJson{
-// 			ID: dbUser[0].ID,
-// 			Email: dbUser[0].Email,
-// 			Username: dbUser[0].Username,
-// 			DisplayName: dbUser[0].DisplayName,
-// 			Website: dbUser[0].Website,
-// 			SocialMedia: dbUser[0].SocialMedia,
-// 			SubmittedSongs: dbUser[0].SubmittedSongs,
-// 			SavedSongs: dbUser[0].SavedSongs,
-// 			SetLists: dbUser[0].SetLists,
-// 			CreatedAt: dbUser[0].CreatedAt,
-// 			UpdatedAt: dbUser[0].UpdatedAt,
-// 		}
-// 		c.JSON(http.StatusOK, user)
-// 		return
-// 	}
-
-// }
+}
 
 // // Edit a user
 // func EditUser(c *gin.Context, db *edgedb.Client) {
@@ -387,60 +366,92 @@ func CreateSong(c *gin.Context, db *edgedb.Client) {
 // 	c.JSON(http.StatusOK, user)
 // }
 
-// // Delete a user
-// func DeleteUser(c *gin.Context, db *edgedb.Client) {
-// 	var header UserHeader
-// 	headerError := c.BindHeader(&header)
-// 	if headerError != nil {
-// 		c.JSON(http.StatusBadRequest, "Error binding header.")
-// 	}
-// 	// Parse Header ID
-// 	headerID, headerParseError := edgedb.ParseUUID(header.ID)
-// 	if headerParseError != nil {
-// 		log.Println(headerParseError)
-// 		c.JSON(http.StatusBadRequest, "Error parsing UUID.")
-// 		return
-// 	}
+// Delete a song
+func DeleteSong(c *gin.Context, db *edgedb.Client) {
+	log.Println("here")
+	var dbSong []Song
+	var header UserHeader
+	headerError := c.BindHeader(&header)
+	if headerError != nil {
+		c.JSON(http.StatusBadRequest, "Error binding header.")
+	}
+	// Parse Header ID
+	headerID, headerParseError := edgedb.ParseUUID(header.ID)
+	if headerParseError != nil {
+		log.Println(headerParseError)
+		c.JSON(http.StatusBadRequest, "Error parsing UUID.")
+		return
+	}
 
-// 	// Parse UUID
-// 	uuid, parseError := edgedb.ParseUUID(c.Param("uuid"))
-// 	if parseError != nil {
-// 		log.Println(parseError)
-// 		c.JSON(http.StatusBadRequest, "Error parsing UUID.")
-// 		return
-// 	}
+	// Parse UUID
+	uuid, parseError := edgedb.ParseUUID(c.Param("uuid"))
+	if parseError != nil {
+		log.Println(parseError)
+		c.JSON(http.StatusBadRequest, "Error parsing UUID.")
+		return
+	}
 
-// 	// Check if header ID matches user ID
-// 	if headerID != uuid {
-// 		c.Status(http.StatusUnauthorized)
-// 		return
-// 	}
+	// Build query arguments
+	args := map[string]interface{}{
+		"uuid": uuid,
+	}
+
+	getSongQuery := `SELECT song::Song {
+		id,
+		submitter: {
+			id,
+			username,
+			display_name
+		},
+	} FILTER .id = <uuid>$uuid`
+
+	// Run query
+	getSongDbError := db.Query(c, getSongQuery, &dbSong, args)
+	if getSongDbError != nil {
+		log.Println(getSongDbError)
+		c.JSON(http.StatusBadRequest, "Error getting song.")
+		return
+	}
+
+	// Check if header ID matches submitter ID
+	if headerID != dbSong[0].Submitter.ID {
+		c.Status(http.StatusUnauthorized)
+		return
+	}
+
+	unlinkSongArgs := map[string]interface{}{
+		"submitter_uuid": headerID,
+		"song_uuid": dbSong[0].ID,
+	}
 	
-// 	// Build query arguments
-// 	args := map[string]interface{}{
-// 		"uuid": uuid,
-// 	}
-
-// 	// Prepare query
-// 	query := `DELETE user::User FILTER .id = <uuid>$uuid`
+	// Prepare query
+	unlinkSongQuery := `UPDATE user::User
+		FILTER .id = <uuid>$submitter_uuid
+		SET {
+			submitted_songs -= (SELECT song::Song FILTER .id = <uuid>$song_uuid)
+		}
+	`
 	
-// 	// Run query
-// 	var dbUser []User
-// 	dbError := db.Query(c, query, &dbUser, args)
-// 	if dbError != nil {
-// 		log.Println(dbError)
-// 		c.JSON(http.StatusBadRequest, "Error deleting user.")
-// 		return
-// 	}
+	// Run query
+	var user []User
+	linkQueryError := db.Query(c, unlinkSongQuery, &user, unlinkSongArgs)
+	if linkQueryError != nil {
+		log.Println(linkQueryError)
+		c.JSON(http.StatusBadRequest, "Error running unlink user query.")
+		return
+	}
 
-// 	// Check if users found
-// 	// If not, return 404
-// 	// Else return no content
-// 	if len(dbUser) == 0 {
-// 		c.JSON(http.StatusNotFound, "User not found.")
-// 		return
-// 	} else {
-// 		c.JSON(http.StatusNoContent, nil)
-// 		return
-// 	}
-// }
+	// Prepare delete query
+	deleteQuery := `DELETE song::Song FILTER .id = <uuid>$uuid`
+	
+	// Run query
+	deleteError := db.Query(c, deleteQuery, &dbSong, args)
+	if deleteError != nil {
+		log.Println(deleteError)
+		c.JSON(http.StatusBadRequest, "Error deleting song.")
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+
+}
